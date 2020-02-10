@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=375, initial-scale=1.0, maximum-scale=1.0 user-scalable=no">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>YuumiRequest</title>
+  <script src="index.js"></script>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+    }
+  </style>
+</head>
+
+<body>
+  <input type="file">
+  <script>
+    (function () {
+      var yuumiRequest = new YuumiRequest({
+        baseURI: 'https://api.isoyu.com',
+        translateRequest: [(data) => {
+          return data
+        }],
+        translateResponse: [(data) => {
+          return JSON.parse(data.response)
+        }]
+      })
+
+      window.onload = function () {
+        var i = 1
+        var cancelToken = {
+          'index2': null,
+          'index5': null
+        }
+
+        while (i < 10) {
+          yuumiRequest.get('/api/picture/index', {
+            query: {
+              page: i + '',
+              per_page: 3
+            },
+            level: i === 6 ? "secondary": 'primary',
+            cancelToken: (i === 7 || i === 2) ? (function (index) {
+              return function (cancel) {
+                cancelToken['index' + index] = cancel
+              }
+            })(i) : undefined
+          }).then(function (res) {
+            console.log(res)
+          })
+
+          if (i === 7 || i === 2) {
+            (function (index) {
+              setTimeout(function () {
+                cancelToken['index' + index] && cancelToken['index' + index]()
+              }, 0)
+            })(i);
+          }
+
+          i++
+        }
+        console.log(yuumiRequest)
+      }
+    })();
+  </script>
+</body>
+
+</html>
