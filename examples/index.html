@@ -50,6 +50,8 @@
             })(i) : undefined
           }).then(function (res) {
             console.log(res)
+          }).catch(function (error) {
+            console.error(error)
           })
 
           if (i === 7 || i === 2) {

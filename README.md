@@ -1,12 +1,10 @@
 
 
-## 快速开始
+## quick start
 
 ```bash
 npm install yuumi-request --save
 ```
-
-## 初始化
 
 ```js
 import YuumiRequest from 'yuumi-request'

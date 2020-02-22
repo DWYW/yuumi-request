@@ -141,6 +141,7 @@
 
     var NetworkRequest = /** @class */ (function () {
         function NetworkRequest(options) {
+            this._id = '';
             this._baseURI = options.baseURI || '';
             // Prevent impact on the next use of the upper layer.
             this._headers = Object.assign({}, options.headers);
@@ -254,13 +255,12 @@
         function YuumiRequest(options) {
             this.$queue = new RequestQueue(options);
         }
-        YuumiRequest.prototype.staticMethod = function (path, options, method) {
-            var level = options.level, _options = __rest(options, ["level"]);
-            return this.request(Object.assign({}, _options, {
+        YuumiRequest.prototype.staticMethod = function (path, method, options) {
+            var _options = Object.assign({}, options, {
                 path: path,
-                level: level,
                 method: method
-            }));
+            });
+            return this.request(_options);
         };
         YuumiRequest.prototype.request = function (options) {
             var _this = this;
@@ -269,16 +269,16 @@
             });
         };
         YuumiRequest.prototype.get = function (path, options) {
-            return this.staticMethod(path, options, 'GET');
+            return this.staticMethod(path, 'GET', options);
         };
         YuumiRequest.prototype.post = function (path, options) {
-            return this.staticMethod(path, options, 'POST');
+            return this.staticMethod(path, 'POST', options);
         };
         YuumiRequest.prototype.put = function (path, options) {
-            return this.staticMethod(path, options, 'PUT');
+            return this.staticMethod(path, 'PUT', options);
         };
         YuumiRequest.prototype.delete = function (path, options) {
-            return this.staticMethod(path, options, 'DELETE');
+            return this.staticMethod(path, 'DELETE', options);
         };
         return YuumiRequest;
     }());

@@ -1,33 +1,24 @@
-import NetworkRequest, { NetworkRequestConstructorOptions, RequestOptions } from '../request'
-
-export declare interface RequestQueueConstructorOptions extends NetworkRequestConstructorOptions {
-  maximum: number
-}
-
-type level = 'primary' | 'secondary'
-
-export declare interface AddItemOptions extends RequestOptions {
-  level: level
-}
+import NetworkRequest from '../request'
+import { _RequestLevel, _NetworkRequestCtor, _RequestQueueCtor, _RequestQueueAddItemOptions } from '../interface'
 
 class RequestQueue {
   private _isRunning: boolean = false
-  private _options: NetworkRequestConstructorOptions
+  private _options: _NetworkRequestCtor
   private _running: any[] = []
-  private _waiting = {
+  private _waiting: any = {
     primary: [],
     secondary: []
   }
 
   private maximum: number
 
-  constructor (options: RequestQueueConstructorOptions) {
+  constructor (options: _RequestQueueCtor) {
     const { maximum, ...params } = options
     this._options = params
     this.maximum = maximum || 4
   }
 
-  addItem (options: AddItemOptions, resolve, reject) {
+  addItem (options: _RequestQueueAddItemOptions, resolve: (value?: any) => void, reject: (value?: any) => void): void {
     const instance = new NetworkRequest(this._options)
     const level = options.level || 'primary'
     const complete = options.complete
@@ -55,7 +46,8 @@ class RequestQueue {
     // cancelToken
     if (options.cancelToken) {
       options.cancelToken(() => {
-        const index = this._waiting[level].findIndex(item => item.instance._id === instance._id)
+        const index = this._waiting[level].findIndex((item: any) => item.instance._id === instance._id)
+
         if (index > -1) {
           this._waiting[level].splice(index, 1)
           options.cancelToken(undefined)
@@ -66,7 +58,7 @@ class RequestQueue {
     !this._isRunning && this.run()
   }
 
-  run () {
+  private run () {
     if (this._running.length >= this.maximum) {
       this._isRunning = false
       return

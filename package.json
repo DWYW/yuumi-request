@@ -1,9 +1,9 @@
 {
   "name": "yuumi-request",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Promise based HTTP client for the browser.",
   "main": "release/index.js",
-  "typings": "src/index.ts",
+  "typings": "types/index.d.ts",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/DWYW/yuumi-request"

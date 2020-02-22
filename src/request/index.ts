@@ -1,42 +1,15 @@
 import validator from '../utils/validator'
-import createXHR, { RequestMethod, XHRConstructorOptions } from './xhr'
-
-declare interface _KV<T> {
-  [key: string]: T
-}
-
-export interface NetworkRequestConstructorOptions {
-  baseURI?: string;
-  headers?: _KV<string>;
-  translateRequest?: ((request: any) => any)[];
-  translateResponse?: ((response: any) => any)[];
-}
-
-export interface RequestOptions {
-  path: string;
-  method: string;
-  async?: boolean;
-  headers?: _KV<string>;
-  query?: _KV<any>;
-  data?: _KV<any>;
-  upload?: {
-    loadstart: () => any;
-    progress: () => any;
-    load: () => any
-  };
-  complete?: () => any;
-  timeout?: number;
-  cancelToken?: (cancel: () => void) => void;
-}
+import createXHR from './xhr'
+import { _object, _RequestMethod, _RequestOptions, _NetworkRequestCtor, createXHROptions } from '../interface'
 
 class NetworkRequest {
   private _baseURI: string
-  private _headers: _KV<string>
+  private _headers: _object<string>
   private _translateRequest: ((response: any) => any)[]
   private _translateResponse: ((response: any) => any)[]
-  public _id: string
+  public _id = ''
 
-  constructor (options: NetworkRequestConstructorOptions) {
+  constructor (options: _NetworkRequestCtor) {
     this._baseURI = options.baseURI || ''
     // Prevent impact on the next use of the upper layer.
     this._headers = Object.assign({}, options.headers)
@@ -52,7 +25,7 @@ class NetworkRequest {
   }
 
   // Inspired by Axios.
-  request (options: RequestOptions) {
+  request (options: _RequestOptions) {
     // Initalize request config width default value.
     this._translateRequest.unshift((data: any) => {
       return this.mergeRequestConfig(data, options)
@@ -75,9 +48,9 @@ class NetworkRequest {
     return promise
   }
 
-  mergeRequestConfig (data: any, options: RequestOptions): XHRConstructorOptions {
+  mergeRequestConfig (data: any, options: _RequestOptions): createXHROptions {
     const { path, method, headers, ..._options } = options
-    const _method = options.method.toUpperCase() as RequestMethod
+    const _method = options.method.toUpperCase() as _RequestMethod
     const _headers = {}
 
     if (validator.typeof(options.data) === 'formdata') {

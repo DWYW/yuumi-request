@@ -1,27 +1,6 @@
-interface _KV<T> {
-  [key: string]: T
-}
+import { _RequestMethod, _object, createXHROptions } from '../interface'
 
-export declare type RequestMethod = 'GET' | 'POST' | 'PUT' | 'DELETE'
-
-export declare interface XHRConstructorOptions {
-  async: boolean;
-  url: string;
-  method: RequestMethod;
-  headers?: _KV<string>;
-  query?: _KV<any>;
-  data?: any;
-  upload?: {
-    loadstart: () => any;
-    progress: () => any;
-    load: () => any
-  };
-  complete?: () => any;
-  timeout?: number;
-  cancelToken?: (cancel: () => void) => void
-}
-
-function getRequestFullPath (path: string, data: _KV<any> = {}) {
+function getRequestFullPath (path: string, data: _object<string|number> = {}) {
   const items = []
   const char = /\?/.test(path) ? '&' : '?'
 
@@ -32,7 +11,7 @@ function getRequestFullPath (path: string, data: _KV<any> = {}) {
   return /\?/.test(path) ? `${path}${char}${items.join('&')}` : `${path}${char}${items.join('&')}`
 }
 
-export default function createXHR (options: XHRConstructorOptions): Promise<any> {
+export default function createXHR (options: createXHROptions): Promise<any> {
   return new Promise((resolve, reject) => {
     const { url, method, headers, data, query, async, upload, complete, timeout, cancelToken } = options
     const xhr = new XMLHttpRequest()
