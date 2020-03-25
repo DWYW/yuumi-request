@@ -5,7 +5,11 @@ function getRequestFullPath (path: string, data: _object<string|number> = {}) {
   const char = /\?/.test(path) ? '&' : '?'
 
   for (const key in data) {
-    items.push(`${key}=${data[key].toString()}`)
+    const item = data[key]
+
+    if (item !== null && item !== undefined && !/^\s*$/.test(item.toString())) {
+      items.push(`${key}=${item.toString()}`)
+    }
   }
 
   return /\?/.test(path) ? `${path}${char}${items.join('&')}` : `${path}${char}${items.join('&')}`
