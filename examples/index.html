@@ -18,55 +18,50 @@
 <body>
   <input type="file">
   <script>
-    (function () {
-      var yuumiRequest = new YuumiRequest({
-        baseURI: 'https://api.isoyu.com',
-        translateRequest: [(data) => {
-          return data
-        }],
-        translateResponse: [(data) => {
-          return JSON.parse(data.response)
-        }]
-      })
+    var ISOYU = new YuumiRequest({
+      baseURI: 'https://api.isoyu.com'
+    })
 
-      window.onload = function () {
-        var i = 1
-        var cancelToken = {
-          'index2': null,
-          'index5': null
-        }
+    ISOYU.interceptors.response((data) => {
+      if (data && data.response) {
+        return JSON.parse(data.response)
+      }
 
-        while (i < 10) {
-          yuumiRequest.get('/api/picture/index', {
-            query: {
-              page: i + '',
-              per_page: 3
-            },
-            level: i === 6 ? "secondary": 'primary',
-            cancelToken: (i === 7 || i === 2) ? (function (index) {
-              return function (cancel) {
-                cancelToken['index' + index] = cancel
-              }
-            })(i) : undefined
+      return data
+    })
+
+    window.onload = function () {
+      var cancelToken = {}
+
+      for (var i = 0; i < 10; i++) {
+        (function (index) {
+          ISOYU.get('/api/picture/index' + (index === 4 ? index : ''), {
+            page: index,
+            per_page: 1
+          }, {
+            // timeout: 1000,
+            level: index === 6 ? 'low': undefined,
+            cancelToken: index === 2 || index === 7 ? function (cancel) {
+              cancelToken[index] = cancel
+            } : undefined
           }).then(function (res) {
             console.log(res)
           }).catch(function (error) {
-            console.error(error)
+            console.error(error.message)
           })
 
-          if (i === 7 || i === 2) {
-            (function (index) {
-              setTimeout(function () {
-                cancelToken['index' + index] && cancelToken['index' + index]()
-              }, 0)
-            })(i);
+          if (cancelToken[index]) {
+            cancelToken[index]()
           }
 
-          i++
-        }
-        console.log(yuumiRequest)
+          // setTimeout(function () {
+          //   if (cancelToken[index]) {
+          //     cancelToken[index]()
+          //   }
+          // }, 100)
+        })(i + 1);
       }
-    })();
+    }
   </script>
 </body>
 

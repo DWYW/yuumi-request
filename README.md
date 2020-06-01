@@ -6,25 +6,21 @@
 npm install yuumi-request --save
 ```
 
-```js
+```ts
 import YuumiRequest from 'yuumi-request'
 
 new YuumiRequest({
   maximum?: number,
   baseURI?: string,
-  headers?: {},
-  translateRequest?: [(data) => {
-    return data
-  }],
-  translateResponse?: [(data) => {
-    return JSON.parse(data.response)
-  }]
+  headers?: {
+    [key: string]: string
+  }
 })
 ```
 
 ## request
 
-``` js
+``` ts
 new YuumiRequest().request({
   path: string,
   method: string,
@@ -33,7 +29,7 @@ new YuumiRequest().request({
     [key: string]: string
   },
   // params for request uri.
-  query?: {
+  params?: {
     [key: string]: any
   },
   // params for send data
@@ -46,37 +42,48 @@ new YuumiRequest().request({
     progress: () => any,
     load: () => any
   },
-  complete?: () => any,
   timeout?: number,
   cancelToken?: (cancel: () => void) => void,
-  // default primary
-  level?: 'primary' | 'secondary'
+  // default normarl
+  level?: 'high' | 'normarl' | 'low'
 })
 ```
 
 ## get, post, delete, put
 
-```js
-new YuumiRequest()[method](path, {
+```ts
+new YuumiRequest()['get'](path, params, {
   async?: boolean,
   headers?: {
     [key: string]: string
   },
-  query?: {
-    [key: string]: any
+  params?: {
+    [key: string]: string|number
   },
-  data?: {
-    [key: string]: any
-  },
-  upload?: {
-    loadstart: () => any,
-    progress: () => any,
-    load: () => any
-  },
-  complete?: () => any,
   timeout?: number,
   cancelToken?: (cancel: () => void) => void,
-  level?: 'primary' | 'secondary'
+  level?: 'high' | 'normarl' | 'low'
 })
+
+new YuumiRequest()['post'|'put'|'delete'](path, data, {
+  async?: boolean,
+  headers?: {
+    [key: string]: string
+  },
+  params?: {
+    [key: string]: string|number
+  },
+  timeout?: number,
+  cancelToken?: (cancel: () => void) => void,
+  level?: 'high' | 'normarl' | 'low'
+})
+```
+
+## interceptors
+
+```ts
+const request = new YuumiRequest()
+request.interceptors.request((data: any) => any, (reason?: any) => any)
+request.interceptors.request((data: any) => any, (reason?: any) => any)
 ```
 

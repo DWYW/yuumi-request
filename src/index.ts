@@ -1,42 +1,85 @@
-import RequestQueue from './queue'
-import { _NoMethodRequestOptions, _RequestMethod, _RequestQueueAddItemOptions, _YuumiRequestCtor } from './interface'
+import { _object, _YuumiRequestCtorOptions, _YuumiRequestOptions, _XMLHttpRequestCtorOptions } from '../types/index'
+import Interceptors from './core/interceptors'
+import Queue from './core/queue'
+import HTTPRequest from './core/request'
 
-class YuumiRequest {
-  public $queue: RequestQueue
-
-  constructor (options: _YuumiRequestCtor) {
-    this.$queue = new RequestQueue(options)
+export default class YuumiRequest {
+  private defaults = {
+    baseURI: '',
+    headers: {
+      'Content-Type': 'application/json'
+    } as _object<string>
   }
 
-  private staticMethod (path: string, method: _RequestMethod, options?: _NoMethodRequestOptions): Promise<any> {
-    const _options: _RequestQueueAddItemOptions = Object.assign({}, options, {
+  public queue: Queue
+  public interceptors = new Interceptors()
+
+  constructor (options: _YuumiRequestCtorOptions = {}) {
+    const { baseURI, headers, maximum } = options || {}
+
+    this.defaults.baseURI = baseURI
+    this.defaults.headers = headers
+
+    this.queue = new Queue({ maximum })
+  }
+
+  request (options: _XMLHttpRequestCtorOptions): Promise<any> {
+    const _headers = Object.assign({}, this.defaults.headers, options.headers)
+    const _options = Object.assign({
+      path: '',
+      async: true,
+      level: 'normal',
+      method: 'GET'
+    }, options, {
+      baseURI: this.defaults.baseURI,
+      headers: _headers
+    })
+    const request = new HTTPRequest(_options)
+    request.interceptors = this.interceptors
+    return this.queue.addItem(request)
+  }
+
+  get (path: string, params: _object<any>, options: _YuumiRequestOptions): Promise<any> {
+    const { params: _params, ..._options } = options
+    const requestParams = Object.assign({}, _params, params)
+    const requestOptions = Object.assign({
       path: path,
-      method: method
-    })
-    return this.request(_options)
+      method: 'GET',
+      params: requestParams
+    }, _options) as _XMLHttpRequestCtorOptions
+    return this.request(requestOptions)
   }
 
-  request (options: _RequestQueueAddItemOptions): Promise<any> {
-    return new Promise((resolve, reject) => {
-      this.$queue.addItem(options, resolve, reject)
-    })
+  post (path: string, data: _object<any>, options: _YuumiRequestOptions): Promise<any> {
+    const { data: _data, ..._options } = options
+    const requestData = Object.assign({}, _data, data)
+    const requestOptions = Object.assign({
+      path: path,
+      method: 'POST',
+      params: requestData
+    }, _options) as _XMLHttpRequestCtorOptions
+    return this.request(requestOptions)
   }
 
-  get (path: string, options?: _NoMethodRequestOptions): Promise<any> {
-    return this.staticMethod(path, 'GET', options)
+  put (path: string, data: _object<any>, options: _YuumiRequestOptions): Promise<any> {
+    const { data: _data, ..._options } = options
+    const requestData = Object.assign({}, _data, data)
+    const requestOptions = Object.assign({
+      path: path,
+      method: 'PUT',
+      params: requestData
+    }, _options) as _XMLHttpRequestCtorOptions
+    return this.request(requestOptions)
   }
 
-  post (path: string, options?: _NoMethodRequestOptions): Promise<any> {
-    return this.staticMethod(path, 'POST', options)
-  }
-
-  put (path: string, options?: _NoMethodRequestOptions): Promise<any> {
-    return this.staticMethod(path, 'PUT', options)
-  }
-
-  delete (path: string, options?: _NoMethodRequestOptions): Promise<any> {
-    return this.staticMethod(path, 'DELETE', options)
+  delete (path: string, data: _object<any>, options: _YuumiRequestOptions): Promise<any> {
+    const { data: _data, ..._options } = options
+    const requestData = Object.assign({}, _data, data)
+    const requestOptions = Object.assign({
+      path: path,
+      method: 'DELETE',
+      params: requestData
+    }, _options) as _XMLHttpRequestCtorOptions
+    return this.request(requestOptions)
   }
 }
-
-export default YuumiRequest
