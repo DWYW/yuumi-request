@@ -68,7 +68,10 @@
         var items = [];
         var char = /\?/.test(path) ? '&' : '?';
         for (var key in data) {
-            items.push(key + "=" + data[key].toString());
+            var item = data[key];
+            if (item !== null && item !== undefined && !/^\s*$/.test(item.toString())) {
+                items.push(key + "=" + item.toString());
+            }
         }
         return /\?/.test(path) ? "" + path + char + items.join('&') : "" + path + char + items.join('&');
     }

@@ -19,17 +19,6 @@
     and limitations under the License.
     ***************************************************************************** */
 
-    var __assign = function() {
-        __assign = Object.assign || function __assign(t) {
-            for (var s, i = 1, n = arguments.length; i < n; i++) {
-                s = arguments[i];
-                for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p)) t[p] = s[p];
-            }
-            return t;
-        };
-        return __assign.apply(this, arguments);
-    };
-
     function __rest(s, e) {
         var t = {};
         for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p) && e.indexOf(p) < 0)
@@ -42,243 +31,319 @@
         return t;
     }
 
+    var Interceptors = /** @class */ (function () {
+        function Interceptors() {
+            this.requestInterceptors = [];
+            this.responseInterceptors = [];
+        }
+        Interceptors.prototype.request = function (resolve, reject) {
+            this.requestInterceptors.push({
+                resolve: resolve,
+                reject: reject
+            });
+        };
+        Interceptors.prototype.response = function (resolve, reject) {
+            this.responseInterceptors.push({
+                resolve: resolve,
+                reject: reject
+            });
+        };
+        return Interceptors;
+    }());
+
     var validator = {
-        typeof: function (data) {
-            return Object.prototype.toString.call(data).slice(8, -1).toLowerCase();
+        is: function (input, type) {
+            if (input === null || input === undefined) {
+                return input === type;
+            }
+            var expectType = type.name || type;
+            var inputType = '';
+            if (input.constructor && input.constructor.hasOwnProperty('name')) {
+                inputType = input.constructor.name;
+            }
+            return inputType === expectType;
         },
-        isFunction: function (data) {
-            return this.typeof(data) === 'function';
-        },
-        isObject: function (data) {
-            return this.typeof(data) === 'object';
-        },
-        isArray: function (data) {
-            return this.typeof(data) === 'array';
-        },
-        isString: function (data) {
-            return this.typeof(data) === 'string';
-        },
-        isEmpty: function (data) {
-            return data === null || data === undefined || data === '';
+        isEmpty: function (input) {
+            if (input === null || input === undefined)
+                return true;
+            if (input.toString) {
+                var valueString = input.toString();
+                return valueString === '' || valueString === 'NaN' || valueString === 'Invalid Date';
+            }
+            return false;
         }
     };
 
-    function getRequestFullPath(path, data) {
-        if (data === void 0) { data = {}; }
-        var items = [];
-        var char = /\?/.test(path) ? '&' : '?';
-        for (var key in data) {
-            items.push(key + "=" + data[key].toString());
-        }
-        return /\?/.test(path) ? "" + path + char + items.join('&') : "" + path + char + items.join('&');
-    }
-    function createXHR(options) {
-        return new Promise(function (resolve, reject) {
-            var url = options.url, method = options.method, headers = options.headers, data = options.data, query = options.query, async = options.async, upload = options.upload, complete = options.complete, timeout = options.timeout, cancelToken = options.cancelToken;
-            var xhr = new XMLHttpRequest();
-            var sendType = '';
-            xhr.open(method, getRequestFullPath(url, query), async);
-            // headers
-            if (headers) {
-                for (var key in headers) {
-                    xhr.setRequestHeader(key, headers[key]);
-                    if (/application\/json/.test(headers[key])) {
-                        sendType = 'json';
-                    }
-                }
-            }
-            // cancelToken
-            cancelToken && cancelToken(function () {
-                xhr.abort();
-            });
-            // events
-            xhr.addEventListener('error', function (event) {
-                cancelToken && cancelToken(undefined);
-                reject(event);
-            });
-            xhr.addEventListener('abort', function (event) {
-                cancelToken && cancelToken(undefined);
-                reject(event);
-            });
-            xhr.addEventListener('timeout', function (event) {
-                cancelToken && cancelToken(undefined);
-                reject(event);
-            });
-            complete && xhr.addEventListener('loadend', complete);
-            xhr.addEventListener('readystatechange', function () {
-                if (xhr.readyState === 4 && xhr.status === 200) {
-                    cancelToken && cancelToken(undefined);
-                    resolve({
-                        request: options,
-                        response: xhr.response
-                    });
-                }
-            });
-            // upload
-            if (upload) {
-                for (var event in upload) {
-                    xhr.upload.addEventListener(event, upload[event]);
-                }
-            }
-            if (timeout) {
-                xhr.timeout = timeout;
-            }
-            // send data.
-            if (method === 'GET') {
-                xhr.send();
-            }
-            else {
-                switch (sendType) {
-                    case 'json':
-                        xhr.send(JSON.stringify(data));
-                        break;
-                    default:
-                        xhr.send(data);
-                }
-            }
-        });
-    }
-
-    var NetworkRequest = /** @class */ (function () {
-        function NetworkRequest(options) {
-            this._id = '';
-            this._baseURI = options.baseURI || '';
-            // Prevent impact on the next use of the upper layer.
-            this._headers = Object.assign({}, options.headers);
-            this._translateRequest = [].concat(options.translateRequest || []);
-            this._translateResponse = [].concat(options.translateResponse || []);
-            this.setRequestID();
-        }
-        NetworkRequest.prototype.setRequestID = function () {
-            var timeStamp = Date.now().toString(26);
-            var random = Math.random().toString(26).slice(2);
-            this._id = timeStamp + "." + random;
-        };
-        // Inspired by Axios.
-        NetworkRequest.prototype.request = function (options) {
-            var _this = this;
-            // Initalize request config width default value.
-            this._translateRequest.unshift(function (data) {
-                return _this.mergeRequestConfig(data, options);
-            });
-            // Create http request.
-            this._translateRequest.push(createXHR);
-            var translate = [].concat(this._translateRequest, this._translateResponse);
-            var promise = Promise.resolve({
-                url: this._baseURI,
-                headers: this._headers,
-                async: true
-            });
-            while (translate.length) {
-                promise = promise.then(translate.shift());
-            }
-            return promise;
-        };
-        NetworkRequest.prototype.mergeRequestConfig = function (data, options) {
-            var path = options.path, method = options.method, headers = options.headers, _options = __rest(options, ["path", "method", "headers"]);
-            var _method = options.method.toUpperCase();
-            var _headers = {};
-            if (validator.typeof(options.data) === 'formdata') {
-                _headers['Content-Type'] = 'multipart/form-data';
-            }
-            return __assign({ url: data.url + path, method: _method, async: validator.isEmpty(data.async) ? true : data.async, headers: Object.assign({}, data.headers, headers, _headers) }, _options);
-        };
-        return NetworkRequest;
-    }());
-
     var RequestQueue = /** @class */ (function () {
         function RequestQueue(options) {
-            this._isRunning = false;
-            this._running = [];
-            this._waiting = {
-                primary: [],
-                secondary: []
+            this.inExec = {
+                length: 0
             };
-            var maximum = options.maximum, params = __rest(options, ["maximum"]);
-            this._options = params;
+            this.waiting = {
+                high: [],
+                normal: [],
+                low: []
+            };
+            var maximum = options.maximum;
             this.maximum = maximum || 4;
         }
-        RequestQueue.prototype.addItem = function (options, resolve, reject) {
+        RequestQueue.prototype.addItem = function (request) {
             var _this = this;
-            var instance = new NetworkRequest(this._options);
-            var level = options.level || 'primary';
-            var complete = options.complete;
-            options.complete = function () {
-                complete && complete();
-                // remove this from running
-                var index = _this._running.findIndex(function (item) { return item._id === instance._id; });
-                _this._running.splice(index, 1);
-                // exec next request
-                !_this._isRunning && _this.run();
-            };
-            this._waiting[level].push({
-                options: options,
-                instance: instance,
-                run: function () {
-                    instance.request(options).then(resolve, reject);
-                    return instance;
+            return new Promise(function (resolve, reject) {
+                request.reject = function (reason) {
+                    _this.itemCompleted(request);
+                    reject(reason);
+                };
+                request.resolve = function (value) {
+                    _this.itemCompleted(request);
+                    resolve(value);
+                };
+                var level = request.options.level;
+                if (_this.waiting[level]) {
+                    _this.waiting[level].push(request);
+                }
+                else {
+                    _this.waiting.normal.push(request);
+                }
+                _this.exec();
+                _this.setCancelToken(request);
+            });
+        };
+        RequestQueue.prototype.exec = function () {
+            if (this.inExec.length >= this.maximum)
+                return;
+            var request;
+            if (this.waiting.high.length) {
+                request = this.waiting.high.shift();
+            }
+            else if (this.waiting.normal.length) {
+                request = this.waiting.normal.shift();
+            }
+            else if (this.waiting.low.length) {
+                request = this.waiting.low.shift();
+            }
+            if (request) {
+                this.inExec.length++;
+                this.inExec[request.id] = request;
+                request.exec();
+            }
+        };
+        RequestQueue.prototype.setCancelToken = function (request) {
+            var _this = this;
+            var _a = request.options, level = _a.level, cancelToken = _a.cancelToken;
+            if (!validator.is(cancelToken, Function))
+                return;
+            cancelToken(function () {
+                var waiting = _this.waiting[level] || _this.waiting.normal;
+                var index = waiting.findIndex(function (item) { return item.id === request.id; });
+                // 异步操作，防止取消后发出请求
+                request.isCancel = true;
+                if (index > -1) {
+                    waiting.splice(index, 1);
                 }
             });
-            // cancelToken
-            if (options.cancelToken) {
-                options.cancelToken(function () {
-                    var index = _this._waiting[level].findIndex(function (item) { return item.instance._id === instance._id; });
-                    if (index > -1) {
-                        _this._waiting[level].splice(index, 1);
-                        options.cancelToken(undefined);
-                    }
-                });
-            }
-            !this._isRunning && this.run();
         };
-        RequestQueue.prototype.run = function () {
-            if (this._running.length >= this.maximum) {
-                this._isRunning = false;
-                return;
+        RequestQueue.prototype.itemCompleted = function (request) {
+            if (this.inExec[request.id]) {
+                delete this.inExec[request.id];
+                this.inExec.length--;
             }
-            if (!this._isRunning) {
-                this._isRunning = true;
-            }
-            var next = this._waiting.primary.shift() || this._waiting.secondary.shift();
-            if (next) {
-                this._running.push(next.run());
-                this.run();
-            }
-            else {
-                this._isRunning = false;
-            }
+            this.exec();
         };
         return RequestQueue;
     }());
 
+    var helper = {
+        params2string: function (params) {
+            if (!validator.is(params, Object))
+                return '';
+            var items = [];
+            for (var key in params) {
+                var item = params[key];
+                if (!validator.isEmpty(item)) {
+                    items.push(key + "=" + item);
+                }
+            }
+            return items.join('&');
+        }
+    };
+
+    function getRequestURI(path, params) {
+        if (params === void 0) { params = {}; }
+        var joinText = /\?/.test(path) ? '&' : '?';
+        return path + joinText + helper.params2string(params);
+    }
+    function getSendData(options) {
+        var method = options.method, data = options.data, headers = options.headers;
+        var sendData;
+        if (/get/i.test(method) === false) {
+            var contentType = headers['Content-Type'];
+            if (/application\/json/i.test(contentType)) {
+                sendData = JSON.stringify(data);
+            }
+            else {
+                sendData = data;
+            }
+        }
+        return sendData;
+    }
+    function setCancelToken(cancelToken, handle) {
+        if (validator.is(cancelToken, Function))
+            cancelToken(handle);
+    }
+    function bindCancel(xhr, reject) {
+        xhr.addEventListener('abort', function () {
+            reject(new Error('request:aborted'));
+        });
+    }
+    function bindTimeout(xhr, reject, timeout) {
+        if (validator.is(timeout, Number)) {
+            xhr.timeout = timeout;
+        }
+        xhr.addEventListener('timeout', function () {
+            reject(new Error('request:timeout'));
+        });
+    }
+    function bindUpload(xhr, upload) {
+        if (upload === void 0) { upload = {}; }
+        for (var event in upload) {
+            xhr.upload.addEventListener(event, upload[event]);
+        }
+    }
+    function createXHR(options) {
+        var path = options.path, method = options.method, params = options.params, data = options.data, headers = options.headers, async = options.async, timeout = options.timeout, upload = options.upload, cancelToken = options.cancelToken;
+        var xhr = new XMLHttpRequest();
+        return new Promise(function (resolve, reject) {
+            xhr.open(method, getRequestURI(path, params), async);
+            if (validator.is(data, FormData)) {
+                headers['Content-Type'] = 'application/x-www-form-urlencoded';
+            }
+            for (var key in headers) {
+                xhr.setRequestHeader(key, headers[key]);
+            }
+            setCancelToken(cancelToken, function () { return (xhr.abort()); });
+            bindCancel(xhr, reject);
+            bindTimeout(xhr, reject, timeout);
+            bindUpload(xhr, upload);
+            xhr.addEventListener('error', function (e) {
+                reject(e);
+            });
+            xhr.addEventListener('readystatechange', function () {
+                if (xhr.readyState === 4 && xhr.status !== 0) {
+                    resolve({
+                        request: options,
+                        status: xhr.status,
+                        response: xhr.status === 200 ? xhr.response : undefined
+                    });
+                }
+            });
+            var sendData = getSendData(options);
+            xhr.send(sendData);
+        }).finally(function () {
+            setCancelToken(cancelToken);
+        });
+    }
+
+    var id = 0;
+    var HTTPRequest = /** @class */ (function () {
+        function HTTPRequest(options) {
+            this.isCancel = false;
+            this.id = id++;
+            this.options = options;
+        }
+        HTTPRequest.prototype.exec = function () {
+            var _this = this;
+            var _a = this.options, baseURI = _a.baseURI, path = _a.path, _options = __rest(_a, ["baseURI", "path"]);
+            var _path = "" + (baseURI || '') + path;
+            var options = Object.assign({ path: _path }, _options);
+            var promise = Promise.resolve(options).then(function (options) {
+                // 如果在发送之前被取消了
+                if (_this.isCancel) {
+                    throw new Error('request:aborted');
+                }
+                return options;
+            });
+            this.interceptors.requestInterceptors.forEach(function (item) {
+                promise = promise.then(item.resolve, item.reject);
+            });
+            promise = promise.then(createXHR, undefined);
+            this.interceptors.responseInterceptors.forEach(function (item) {
+                promise = promise.then(item.resolve, item.reject);
+            });
+            return promise.then(this.resolve, this.reject);
+        };
+        return HTTPRequest;
+    }());
+
     var YuumiRequest = /** @class */ (function () {
         function YuumiRequest(options) {
-            this.$queue = new RequestQueue(options);
+            if (options === void 0) { options = {}; }
+            this.defaults = {
+                baseURI: '',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            };
+            this.interceptors = new Interceptors();
+            var _a = options || {}, baseURI = _a.baseURI, headers = _a.headers, maximum = _a.maximum;
+            this.defaults.baseURI = baseURI;
+            this.defaults.headers = headers;
+            this.queue = new RequestQueue({ maximum: maximum });
         }
-        YuumiRequest.prototype.staticMethod = function (path, method, options) {
-            var _options = Object.assign({}, options, {
-                path: path,
-                method: method
-            });
-            return this.request(_options);
-        };
         YuumiRequest.prototype.request = function (options) {
-            var _this = this;
-            return new Promise(function (resolve, reject) {
-                _this.$queue.addItem(options, resolve, reject);
+            var _headers = Object.assign({}, this.defaults.headers, options.headers);
+            var _options = Object.assign({
+                path: '',
+                async: true,
+                level: 'normal',
+                method: 'GET'
+            }, options, {
+                baseURI: this.defaults.baseURI,
+                headers: _headers
             });
+            var request = new HTTPRequest(_options);
+            request.interceptors = this.interceptors;
+            return this.queue.addItem(request);
         };
-        YuumiRequest.prototype.get = function (path, options) {
-            return this.staticMethod(path, 'GET', options);
+        YuumiRequest.prototype.get = function (path, params, options) {
+            var _params = options.params, _options = __rest(options, ["params"]);
+            var requestParams = Object.assign({}, _params, params);
+            var requestOptions = Object.assign({
+                path: path,
+                method: 'GET',
+                params: requestParams
+            }, _options);
+            return this.request(requestOptions);
         };
-        YuumiRequest.prototype.post = function (path, options) {
-            return this.staticMethod(path, 'POST', options);
+        YuumiRequest.prototype.post = function (path, data, options) {
+            var _data = options.data, _options = __rest(options, ["data"]);
+            var requestData = Object.assign({}, _data, data);
+            var requestOptions = Object.assign({
+                path: path,
+                method: 'POST',
+                params: requestData
+            }, _options);
+            return this.request(requestOptions);
         };
-        YuumiRequest.prototype.put = function (path, options) {
-            return this.staticMethod(path, 'PUT', options);
+        YuumiRequest.prototype.put = function (path, data, options) {
+            var _data = options.data, _options = __rest(options, ["data"]);
+            var requestData = Object.assign({}, _data, data);
+            var requestOptions = Object.assign({
+                path: path,
+                method: 'PUT',
+                params: requestData
+            }, _options);
+            return this.request(requestOptions);
         };
-        YuumiRequest.prototype.delete = function (path, options) {
-            return this.staticMethod(path, 'DELETE', options);
+        YuumiRequest.prototype.delete = function (path, data, options) {
+            var _data = options.data, _options = __rest(options, ["data"]);
+            var requestData = Object.assign({}, _data, data);
+            var requestOptions = Object.assign({
+                path: path,
+                method: 'DELETE',
+                params: requestData
+            }, _options);
+            return this.request(requestOptions);
         };
         return YuumiRequest;
     }());

@@ -1,25 +1,28 @@
-export default {
-  typeof (data:any): string {
-    return Object.prototype.toString.call(data).slice(8, -1).toLowerCase()
+const validator = {
+  is: function (input, type): boolean {
+    if (input === null || input === undefined) {
+      return input === type
+    }
+
+    const expectType = type.name || type
+    let inputType = ''
+    if (input.constructor && input.constructor.hasOwnProperty('name')) {
+      inputType = input.constructor.name
+    }
+
+    return inputType === expectType
   },
 
-  isFunction (data: any): boolean {
-    return this.typeof(data) === 'function'
-  },
+  isEmpty: function (input): boolean {
+    if (input === null || input === undefined) return true
 
-  isObject (data: any): boolean {
-    return this.typeof(data) === 'object'
-  },
+    if (input.toString) {
+      const valueString = input.toString()
+      return valueString === '' || valueString === 'NaN' || valueString === 'Invalid Date'
+    }
 
-  isArray (data: any): boolean {
-    return this.typeof(data) === 'array'
-  },
-
-  isString (data: any): boolean {
-    return this.typeof(data) === 'string'
-  },
-
-  isEmpty (data: any): boolean {
-    return data === null || data === undefined || data === ''
+    return false
   }
 }
+
+export default validator

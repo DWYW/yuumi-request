@@ -6,7 +6,7 @@ module.exports = {
 	"extends": [
 		"standard",
 		"eslint:recommended",
-		"plugin:@typescript-eslint/eslint-recommended"
+		"plugin:@typescript-eslint/recommended"
 	],
 	"globals": {
 		"Atomics": "readonly",
@@ -21,6 +21,8 @@ module.exports = {
 		"@typescript-eslint"
 	],
 	"rules": {
-		"no-unused-vars": "warn"
+		"no-unused-vars": "warn",
+		"no-prototype-builtins": 'off',
+		"@typescript-eslint/no-explicit-any": 'off'
 	}
 };
