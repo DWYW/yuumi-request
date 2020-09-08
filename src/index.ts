@@ -56,7 +56,7 @@ export default class YuumiRequest {
     const requestOptions = Object.assign({
       path: path,
       method: 'POST',
-      params: requestData
+      data: requestData
     }, _options) as _XMLHttpRequestCtorOptions
     return this.request(requestOptions)
   }
@@ -67,7 +67,7 @@ export default class YuumiRequest {
     const requestOptions = Object.assign({
       path: path,
       method: 'PUT',
-      params: requestData
+      data: requestData
     }, _options) as _XMLHttpRequestCtorOptions
     return this.request(requestOptions)
   }
@@ -78,7 +78,7 @@ export default class YuumiRequest {
     const requestOptions = Object.assign({
       path: path,
       method: 'DELETE',
-      params: requestData
+      data: requestData
     }, _options) as _XMLHttpRequestCtorOptions
     return this.request(requestOptions)
   }

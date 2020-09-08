@@ -1,6 +1,6 @@
 {
   "name": "yuumi-request",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Promise based HTTP client for the browser.",
   "main": "release/index.js",
   "typings": "types/index.d.ts",
@@ -12,6 +12,7 @@
     "dev": "gulp --env=development",
     "dist": "gulp --env=production",
     "lint": "gulp lint",
+    "publish": "npm run dist && npm publish",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [
