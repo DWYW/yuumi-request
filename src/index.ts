@@ -1,85 +1,96 @@
-import { _object, _YuumiRequestCtorOptions, _YuumiRequestOptions, _XMLHttpRequestCtorOptions } from '../types/index'
-import Interceptors from './core/interceptors'
-import Queue from './core/queue'
-import HTTPRequest from './core/request'
+import { Interceptor } from "./interceptor"
+import { addQueueItem, setMaxCount } from "./queue/index"
+import { QueueItmeLevel } from "./queue/item"
+import { XHRCtor, XHRExtraCtor } from "./request/xhr/index"
 
-export default class YuumiRequest {
-  private defaults = {
-    baseURI: '',
-    headers: {
-      'Content-Type': 'application/json'
-    } as _object<string>
+interface StringObject { [key: string]: string }
+
+interface YuumiRequestCtor {
+  baseURI?: string;
+  headers?: StringObject;
+  requestMaxCount?: number;
+}
+
+export interface RequestOptions extends XHRCtor {
+  level? : QueueItmeLevel
+}
+
+export interface MethodRequestOptions extends XHRExtraCtor {
+  level? : QueueItmeLevel
+}
+
+export class YuumiRequest {
+  public baseURI: string
+  public baseHeaders: StringObject
+  public interceptor: Interceptor
+
+  constructor (config?: YuumiRequestCtor) {
+    const { baseURI, headers, requestMaxCount } = Object.assign({
+      baseURI: '',
+      headers: {},
+      requestMaxCount: {}
+    }, config)
+
+    this.baseURI = baseURI
+    this.baseHeaders = headers
+    this.interceptor = new Interceptor()
+    setMaxCount(requestMaxCount)
   }
 
-  public queue: Queue
-  public interceptors = new Interceptors()
+  request (options: RequestOptions) {
+    const proxy: any = {}
 
-  constructor (options: _YuumiRequestCtorOptions = {}) {
-    const { baseURI, headers, maximum } = options || {}
-
-    this.defaults.baseURI = baseURI
-    this.defaults.headers = headers
-
-    this.queue = new Queue({ maximum })
-  }
-
-  request (options: _XMLHttpRequestCtorOptions): Promise<any> {
-    const _headers = Object.assign({}, this.defaults.headers, options.headers)
-    const _options = Object.assign({
-      path: '',
-      async: true,
-      level: 'normal',
-      method: 'GET'
-    }, options, {
-      baseURI: this.defaults.baseURI,
-      headers: _headers
+    const promise = new Promise((resolve, reject) => {
+      proxy.resolve = resolve
+      proxy.reject = reject
     })
-    const request = new HTTPRequest(_options)
-    request.interceptors = this.interceptors
-    return this.queue.addItem(request)
+
+    options.path = `${this.baseURI || ''}${options.path}`
+    options.headers = Object.assign({}, this.baseHeaders, options.headers)
+
+    addQueueItem(Object.assign({
+      interceptor: this.interceptor
+    }, proxy, options))
+
+    return promise
   }
 
-  get (path: string, params: _object<any>, options: _YuumiRequestOptions): Promise<any> {
-    const { params: _params, ..._options } = options
-    const requestParams = Object.assign({}, _params, params)
-    const requestOptions = Object.assign({
+  get (path: string, params?: { [key: string]: number|string }, options?: MethodRequestOptions): Promise<any> {
+    const _params = options?.params
+    const _options = Object.assign({}, options, {
       path: path,
       method: 'GET',
-      params: requestParams
-    }, _options) as _XMLHttpRequestCtorOptions
-    return this.request(requestOptions)
+      params: Object.assign({}, _params, params)
+    }) as RequestOptions
+    return this.request.call(this, _options)
   }
 
-  post (path: string, data: _object<any>, options: _YuumiRequestOptions): Promise<any> {
-    const { data: _data, ..._options } = options
-    const requestData = Object.assign({}, _data, data)
-    const requestOptions = Object.assign({
+  post (path: string, data?: any, options?: MethodRequestOptions): Promise<any> {
+    const _options = Object.assign({}, options, {
       path: path,
       method: 'POST',
-      data: requestData
-    }, _options) as _XMLHttpRequestCtorOptions
-    return this.request(requestOptions)
+      data: data
+    }) as RequestOptions
+    return this.request.call(this, _options)
   }
 
-  put (path: string, data: _object<any>, options: _YuumiRequestOptions): Promise<any> {
-    const { data: _data, ..._options } = options
-    const requestData = Object.assign({}, _data, data)
-    const requestOptions = Object.assign({
+  put (path: string, data?: any, options?: MethodRequestOptions): Promise<any> {
+    const _options = Object.assign({}, options, {
       path: path,
       method: 'PUT',
-      data: requestData
-    }, _options) as _XMLHttpRequestCtorOptions
-    return this.request(requestOptions)
+      data: data
+    }) as RequestOptions
+    return this.request.call(this, _options)
   }
 
-  delete (path: string, data: _object<any>, options: _YuumiRequestOptions): Promise<any> {
-    const { data: _data, ..._options } = options
-    const requestData = Object.assign({}, _data, data)
-    const requestOptions = Object.assign({
+  delete (path: string, data?: any, options?: MethodRequestOptions): Promise<any> {
+    const _options = Object.assign({}, options, {
       path: path,
       method: 'DELETE',
-      data: requestData
-    }, _options) as _XMLHttpRequestCtorOptions
-    return this.request(requestOptions)
+      data: data
+    }) as RequestOptions
+    return this.request.call(this, _options)
   }
 }
+
+export {QueueItmeLevel} from './queue/item'
