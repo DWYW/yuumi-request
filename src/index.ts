@@ -28,7 +28,7 @@ export class YuumiRequest {
     const { baseURI, headers, requestMaxCount } = Object.assign({
       baseURI: '',
       headers: {},
-      requestMaxCount: {}
+      requestMaxCount: 0
     }, config)
 
     this.baseURI = baseURI

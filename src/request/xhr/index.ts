@@ -82,8 +82,9 @@ export default class XHR {
   setHeaders (xhr: XMLHttpRequest) {
     const headers = this.$config.headers || (this.$config.headers = {})
 
-    if (/get/i.test(this.method) && validator.is(this.$config.data, FormData)) {
-      headers['Content-Type'] = 'application/x-www-form-urlencoded'
+    if (validator.is(this.$config.data, FormData)) {
+      // Let the browser set it
+      delete headers['Content-Type']
     }
 
     for (const key in headers) {
@@ -93,14 +94,19 @@ export default class XHR {
 
   sendData (xhr: XMLHttpRequest) {
     const headers = this.$config.headers
-    const data: any = this.$config.data
 
     if (/get/i.test(this.method)) {
       xhr.send(null)
-    } else if (headers && /application\/json/i.test(headers['Content-Type'])) {
-      xhr.send(JSON.stringify(data))
     } else {
-      xhr.send(data)
+      const data: any = this.$config.data
+
+      if (headers && /application\/json/i.test(headers['Content-Type'])) {
+        xhr.send(JSON.stringify(helper.dataRemoveEmpty(data)))
+      } else if (headers && /application\/x-www-form-urlencoded/i.test(headers['Content-Type'])) {
+        xhr.send(helper.params2string(data))
+      } else {
+        xhr.send(data)
+      }
     }
   }
 

@@ -8,9 +8,11 @@ export const queue = {
     LOW: <QueueItem[]> []
   }
 }
-export let maxCount = 4
+
+const DEFAULT_MAX_COUNT = 4
+export let maxCount = DEFAULT_MAX_COUNT
 export function setMaxCount (count: number) {
-  maxCount = Math.max(count, 2)
+  maxCount = Math.max(count, DEFAULT_MAX_COUNT)
 }
 
 export function addQueueItem (config: QueueItemCtor) {
