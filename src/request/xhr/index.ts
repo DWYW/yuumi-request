@@ -60,11 +60,19 @@ export default class XHR {
 
     xhr.addEventListener('readystatechange', () => {
       if (xhr.readyState === 4 && xhr.status !== 0) {
-        proxy.resolve({
-          request: this.$config,
-          status: xhr.status,
-          response: xhr.status === 200 ? xhr.response : undefined
-        })
+        if (xhr.status === 200) {
+          proxy.resolve({
+            request: this.$config,
+            status: xhr.status,
+            response: xhr.response
+          })
+        } else {
+          proxy.reject({
+            request: this.$config,
+            status: xhr.status,
+            response: xhr.response
+          })
+        }
       }
     })
 
