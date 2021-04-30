@@ -2,7 +2,7 @@ import validator from './validator'
 
 const helper = {
   params2string: function (params?: any): string {
-    if (!validator.is(params, Object)) return ''
+    if (!validator.isObject(params)) return ''
 
     const items = []
 
@@ -11,9 +11,9 @@ const helper = {
 
       if (validator.isEmpty(item)) continue
 
-      if (validator.is(item, Array)) {
+      if (validator.isArray(item)) {
         item.forEach((child: any, idx: number) => {
-          if (validator.is(child, Object)) {
+          if (validator.isObject(child)) {
             items.push(`${key}[${idx}]=${JSON.stringify(child)}`)
           } else {
             items.push(`${key}[${idx}]=${child}`)
@@ -23,7 +23,7 @@ const helper = {
         continue
       }
 
-      if (validator.is(item, Object)) {
+      if (validator.isObject(item)) {
         items.push(`${key}=${JSON.stringify(item)}`)
         continue
       }
@@ -37,7 +37,7 @@ const helper = {
   dataRemoveEmpty: function (data: { [key: string]: any }) {
     const res: { [key: string]: any } = {}
 
-    if (!validator.is(data, Object)) return res
+    if (!validator.isObject(data)) return res
 
     for (const key in data) {
       if (!Object.prototype.hasOwnProperty.call(data, key)) continue
