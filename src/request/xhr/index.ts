@@ -90,7 +90,7 @@ export default class XHR {
   setHeaders (xhr: XMLHttpRequest) {
     const headers = this.$config.headers || (this.$config.headers = {})
 
-    if (validator.is(this.$config.data, FormData)) {
+    if (validator.isFormData(this.$config.data)) {
       // Let the browser set it
       delete headers['Content-Type']
     }
@@ -121,7 +121,7 @@ export default class XHR {
   addTimeoutListener (xhr: XMLHttpRequest, listener: EventListener) {
     const { timeout } = this.$config
 
-    if (timeout && validator.is(timeout, Number)) {
+    if (timeout && validator.isNumber(timeout)) {
       xhr.timeout = timeout
     }
 
