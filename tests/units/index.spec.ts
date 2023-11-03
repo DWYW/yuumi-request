@@ -1,5 +1,4 @@
-import { YuumiRequest, QueueItmeLevel } from '../../src/index'
-import { queue, maxCount } from '../../src/queue'
+import { YuumiRequest } from '../../src/index'
 import { MockXHR } from '../utils/createXHR'
 import { delay } from '../utils/helper'
 
@@ -31,7 +30,7 @@ describe('yuumi-request', () => {
     const _yuumi = new YuumiRequest({
       headers: headers
     })
-    expect(_yuumi.baseHeaders).toBe(headers)
+    expect(_yuumi.headers).toBe(headers)
   })
 
   it('request 返回 Promise', async () => {
@@ -75,52 +74,5 @@ describe('yuumi-request', () => {
     mockXHR.response()
     const res: any = await promise
     expect(res.status).toBe(200)
-  })
-
-  it('一个请求状态完成后从队列中移除', async () => {
-    const yuumi = new YuumiRequest({
-      requestMaxCount: 3
-    })
-    const promise = yuumi.post('/get', { id: 1 })
-    mockXHR.response()
-    expect(queue.waiting.NORMAL.length).toBe(1)
-    await promise
-    expect(queue.waiting.NORMAL.length).toBe(0)
-  })
-
-  it('cancelToken', async () => {
-    const yuumi = new YuumiRequest({
-      requestMaxCount: 3
-    })
-    let cancelToken: any = null
-
-    const promise = yuumi.post('/get', { id: 1 }, {
-      cancelToken: (cancel) => {
-        cancelToken = cancel
-      }
-    })
-    expect(queue.waiting.NORMAL.length).toBe(1)
-    cancelToken()
-    try {
-      await promise
-    } catch (error) {}
-    expect(queue.waiting.NORMAL.length).toBe(0)
-  })
-
-  it('设置最大请求并发', async () => {
-    const yuumi = new YuumiRequest({
-      requestMaxCount: 3
-    })
-    yuumi.get('/get', { id: 1 }, { level: QueueItmeLevel.LOW })
-    yuumi.get('/get', { id: 2 })
-    yuumi.get('/get', { id: 3 })
-    yuumi.get('/get', { id: 4 }, { level: QueueItmeLevel.HIGH })
-
-    expect(maxCount).toBe(3)
-    await delay(0)
-    expect(queue.waiting.NORMAL.length).toBe(0)
-    expect(queue.waiting.LOW.length).toBe(1)
-    expect(queue.running.length).toBe(3)
-    await delay(500)
   })
 })

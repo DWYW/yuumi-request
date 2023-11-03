@@ -20,12 +20,12 @@ describe('yuumi-request interceptor', () => {
     const yuumiRequest = new YuumiRequest()
 
     yuumiRequest.interceptor.response((value) => value)
-    expect(yuumiRequest.interceptor.responseInterceptros.length).toBe(1)
+    expect(yuumiRequest.interceptor.responseInterceptors.length).toBe(1)
 
     yuumiRequest.interceptor.response((value) => value, (reason) => reason)
-    expect(yuumiRequest.interceptor.responseInterceptros.length).toBe(2)
+    expect(yuumiRequest.interceptor.responseInterceptors.length).toBe(2)
 
-    yuumiRequest.interceptor.responseInterceptros.forEach((item) => {
+    yuumiRequest.interceptor.responseInterceptors.forEach((item) => {
       expect(item).toHaveProperty('0')
       expect(item).toHaveProperty('1')
     })
