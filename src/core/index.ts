@@ -150,6 +150,15 @@ export class YuumiRequest implements YuumiRequestInterface {
     return <Promise<T>>this.request.call(this, _options)
   }
 
+  public patch<T>(path: string, data?: any, options?: MethodRequestOptions) {
+    const _options = Object.assign({}, options, {
+      path: path,
+      method: 'PATCH',
+      data: Object.assign({}, options?.data, data)
+    }) as RequestOption
+    return <Promise<T>>this.request.call(this, _options)
+  }
+
   public put<T>(path: string, data?: any, options?: MethodRequestOptions) {
     const _options = Object.assign({}, options, {
       path: path,
