@@ -10,11 +10,14 @@ npm install yuumi-request --save
 import YuumiRequest from 'yuumi-request'
 
 new YuumiRequest({
-  requestMaxCount?: number,
-  baseURI?: string,
-  headers?: {
-    [key: string]: string
-  }
+  baseURI: string
+  headers: Record<string, string>
+  concurrency: number
+  timeout: number
+  // 自定义params格式化函数
+  paramStringify?: (value: any) => string
+  // 自定义xhr函数
+  xhr?: <T>(option: XHR_RequestOption) => Promise<T>
 })
 ```
 
@@ -30,8 +33,8 @@ new YuumiRequest().request({
   data?: any
   timeout?: number
   cancelToken?: (cancel?: () => void) => void
-  upload?: { [key: string]: EventListener }
-  level? : 'WAITING'|'PENDING'|'COMPLETED'
+  uploader?: { [key: string]: EventListener }
+  enforce? : "pre"|"normal"
 })
 ```
 
@@ -45,8 +48,8 @@ new YuumiRequest()['get'](path, params, {
   data?: any
   timeout?: number
   cancelToken?: (cancel?: () => void) => void
-  upload?: { [key: string]: EventListener }
-  level? : 'WAITING'|'PENDING'|'COMPLETED'
+  uploader?: { [key: string]: EventListener }
+  enforce? : "pre"|"normal"
 })
 
 new YuumiRequest()['post'|'put'|'delete'](path, data, {
@@ -56,8 +59,8 @@ new YuumiRequest()['post'|'put'|'delete'](path, data, {
   data?: any
   timeout?: number
   cancelToken?: (cancel?: () => void) => void
-  upload?: { [key: string]: EventListener }
-  level? : 'WAITING'|'PENDING'|'COMPLETED'
+  uploader?: { [key: string]: EventListener }
+  enforce? : "pre"|"normal"
 })
 ```
 
