@@ -91,8 +91,7 @@ export class XHR {
     if (isFormData(this.data)) {
       xhr.send(this.data)
     } else if (headers && /application\/json/i.test(headers['Content-Type'])) {
-      const data = dataRemoveEmpty(this.data)
-      xhr.send(JSON.stringify(data))
+      xhr.send(JSON.stringify(this.data))
     } else if (headers && /application\/x-www-form-urlencoded/i.test(headers['Content-Type'])) {
       xhr.send(this.encodeData)
     } else {

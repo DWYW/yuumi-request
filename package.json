@@ -1,6 +1,6 @@
 {
   "name": "yuumi-request",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "request queue for browser",
   "main": "dist/yuumi-request.js",
   "types": "types/index.d.ts",
