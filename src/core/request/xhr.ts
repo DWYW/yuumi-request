@@ -62,7 +62,7 @@ export class XHR {
 
     xhr.addEventListener("readystatechange", () => {
       if (xhr.readyState === 4 && xhr.status !== 0) {
-        if (xhr.status === 200) {
+        if (/^20[01234]$/.test(xhr.status.toString())) {
           proxy.resolve({
             request: this,
             status: xhr.status,
