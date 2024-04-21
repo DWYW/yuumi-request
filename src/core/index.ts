@@ -107,7 +107,19 @@ export class YuumiRequest implements YuumiRequestInterface {
       job.addTask(...item)
     })
     // request
-    job.addTask(this.xhr as ResolveFun)
+    job.addTask((value: any) => {
+      // 拼接拦截器添加的params
+      if (value.params) {
+        const _query = this.paramStringify ? this.paramStringify(value.params) : paramStringify(value.params);
+        if (_query) {
+          value.url = /\?/.test(_url) ? `${_url}&${_query}` : `${_url}?${_query}`;
+        }
+      }
+
+      return this.xhr(value as XHR_RequestOption).finally(() => {
+        job.dispatch("afterXHR")
+      })
+    })
     // response interceptors
     this.interceptor.responseInterceptors.forEach((item) => {
       job.addTask(...item)
