@@ -50,10 +50,11 @@ export class Queue {
     if (!job) return
 
     this.session++
-    job.run().finally(() => {
+    job.addLisenter("afterXHR", () => {
       this.session--
-      this._run()
-    }).catch((err) => {
+    })
+
+    job.run().finally(() => this._run()).catch((err) => {
       this.dispatch("fail", err)
     })
 

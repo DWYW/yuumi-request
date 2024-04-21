@@ -100,22 +100,27 @@ export class Job implements JobInterface {
   }
 
   /** 事件监听 */
-  private lisenters: JobLisenters = {
+  private lisenters: JobLisenters & Record<string, Function[]> = {
     success: [],
     fail: [],
     complete: [],
     cancel: []
   }
 
-  private dispatch(name: keyof JobLisenters, value?: unknown) {
+  dispatch(name: string, value?: unknown) {
+    if (!this.lisenters[name]) return
     this.lisenters[name].forEach((item) => item(value))
   }
 
-  addLisenter(name: keyof JobLisenters, lisenter: (value?: unknown) => void) {
+  addLisenter(name: string, lisenter: (value?: unknown) => void) {
+    if (!this.lisenters[name]) {
+      this.lisenters[name] = []
+    }
     this.lisenters[name].push(lisenter)
   }
 
-  removeListenr(name: keyof JobLisenters, lisenter: (value?: unknown) => void) {
+  removeListenr(name: string, lisenter: (value?: unknown) => void) {
+    if (!this.lisenters[name]) return
     const index = this.lisenters[name].findIndex((item) => item === lisenter)
     if (index >= 0) {
       this.lisenters[name].splice(index, 1)
